@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 
 interface GitFlowFormProps {
   formData: {
@@ -15,9 +14,8 @@ interface GitFlowFormProps {
     issueTitle: string;
     baseBranch: string;
     pullBranch: string;
-    useSSH: boolean;
   };
-  onChange: (field: string, value: string | boolean) => void;
+  onChange: (field: string, value: string) => void;
 }
 
 const COMMIT_TYPES = [
@@ -39,34 +37,21 @@ const GitFlowForm: React.FC<GitFlowFormProps> = ({ formData, onChange }) => {
         <CardDescription>Fill in the details to generate your GitFlow commands</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Switch 
-            checked={formData.useSSH}
-            onCheckedChange={(checked) => onChange('useSSH', checked)}
-            id="ssh-mode"
+        <div className="space-y-2">
+          <Label htmlFor="sshAccount">SSH Account Name</Label>
+          <Input
+            id="sshAccount"
+            placeholder="e.g., personal"
+            value={formData.sshAccount}
+            onChange={(e) => onChange('sshAccount', e.target.value)}
           />
-          <Label htmlFor="ssh-mode">Use SSH Mode</Label>
         </div>
         
-        {formData.useSSH && (
-          <div className="space-y-2">
-            <Label htmlFor="sshAccount">SSH Account Name</Label>
-            <Input
-              id="sshAccount"
-              placeholder="e.g., personal"
-              value={formData.sshAccount}
-              onChange={(e) => onChange('sshAccount', e.target.value)}
-            />
-          </div>
-        )}
-        
         <div className="space-y-2">
-          <Label htmlFor="repoPath">{formData.useSSH ? 'SSH Repository Path' : 'HTTPS Repository URL'}</Label>
+          <Label htmlFor="repoPath">Repository Path</Label>
           <Input
             id="repoPath"
-            placeholder={formData.useSSH 
-              ? "e.g., git@github.com:User/Repo.git" 
-              : "e.g., https://github.com/User/Repo.git"}
+            placeholder="e.g., git@github.com:User/Repo.git"
             value={formData.repoPath}
             onChange={(e) => onChange('repoPath', e.target.value)}
           />

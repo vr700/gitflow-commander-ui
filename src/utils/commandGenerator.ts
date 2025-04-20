@@ -7,10 +7,29 @@ export interface FormData {
   issueTitle: string;
   baseBranch: string;
   pullBranch: string;
-  useSSH: boolean;
 }
 
-export function generateCommands(formData: FormData): { command: string; stepId: string }[] {
+export function parseIssueTitle(issueTitle: string): { issueNumber: string; issueName: string } {
+  // Extract issue number if present
+  const issueNumberMatch = issueTitle.match(/#(\d+)/);
+  const issueNumber = issueNumberMatch ? issueNumberMatch[1] : '';
+  
+  // Create issue name by:
+  // 1. Removing the issue number part
+  // 2. Converting to lowercase
+  // 3. Replace spaces with hyphens
+  // 4. Remove special characters
+  let issueName = issueTitle
+    .replace(/#\d+/, '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]/g, '');
+  
+  return { issueNumber, issueName };
+}
+
+export function generateCommands(formData: FormData & { useSSH?: boolean }): { command: string; stepId: string }[] {
   if (!formData) return [];
   
   const { issueNumber, issueName } = parseIssueTitle(formData.issueTitle);
@@ -29,7 +48,6 @@ export function generateCommands(formData: FormData): { command: string; stepId:
   
   // Format repository path based on SSH/HTTPS mode
   let cloneUrl = formData.repoPath;
-  
   if (formData.useSSH) {
     // Handle SSH format
     if (cloneUrl.startsWith('http')) {
@@ -43,12 +61,10 @@ export function generateCommands(formData: FormData): { command: string; stepId:
     }
     
     // Apply SSH account if needed
-    if (formData.sshAccount) {
-      cloneUrl = cloneUrl.replace(
-        /git@github.com:/,
-        `git@github.com-${formData.sshAccount}:`
-      );
-    }
+    cloneUrl = cloneUrl.replace(
+      /git@github.com:/,
+      `git@github.com-${formData.sshAccount}:`
+    );
   } else {
     // Handle HTTPS format
     if (cloneUrl.includes('git@github.com')) {

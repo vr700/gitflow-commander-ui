@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -19,12 +20,12 @@ const Index = () => {
     issueTitle: '',
     baseBranch: '',
     pullBranch: '',
-    useSSH: true, // Default to SSH mode
   });
 
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const [useSSH, setUseSSH] = useState(true);
 
-  const handleFormChange = (field: string, value: string | boolean) => {
+  const handleFormChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -41,8 +42,7 @@ const Index = () => {
     handleStepComplete('pr');
   };
 
-  const commands = useMemo(() => generateCommands(formData), [formData]);
-
+  const commands = useMemo(() => generateCommands({ ...formData, useSSH }), [formData, useSSH]);
   const flowSteps = useMemo(() => getFlowSteps(formData, completedSteps), [formData, completedSteps]);
 
   const isFormComplete = Object.values(formData).every(Boolean);
@@ -60,8 +60,8 @@ const Index = () => {
             
             <div className="flex items-center space-x-2">
               <Switch 
-                checked={formData.useSSH}
-                onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, useSSH: checked }))}
+                checked={useSSH}
+                onCheckedChange={setUseSSH}
                 id="ssh-mode"
               />
               <label htmlFor="ssh-mode" className="text-sm font-medium">
