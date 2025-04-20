@@ -9,6 +9,7 @@ import GitFlowForm from '@/components/GitFlowForm';
 import CommandBlock from '@/components/CommandBlock';
 import PRGuidance from '@/components/PRGuidance';
 import { generateCommands } from '@/utils/commandGenerator';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const [formData, setFormData] = useState({
@@ -88,6 +89,8 @@ const Index = () => {
               )}
             </div>
             
+            <PRGuidance issueTitle={formData.issueTitle} commitType={formData.commitType} />
+            
             <div className="space-y-4">
               <Button
                 onClick={handlePRComplete}
@@ -100,12 +103,22 @@ const Index = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   variant="outline"
+                  onClick={() => window.open('/ssh-keys-guide', '_blank')}
+                  className="flex-1"
+                >
+                  Create SSH Keys Guide
+                  <ExternalLink className="ml-2" size={16} />
+                </Button>
+                
+                <Button
+                  variant="outline"
                   onClick={() => window.open('https://docs.github.com/en/authentication/connecting-to-github-with-ssh', '_blank')}
                   className="flex-1"
                 >
                   How to set up your SSH keys
                   <ExternalLink className="ml-2" size={16} />
                 </Button>
+                
                 <Button
                   variant="outline"
                   onClick={() => window.open('https://docs.github.com/en', '_blank')}
@@ -116,8 +129,6 @@ const Index = () => {
                 </Button>
               </div>
             </div>
-
-            <PRGuidance issueTitle={formData.issueTitle} commitType={formData.commitType} />
           </div>
           
           {/* Right - Flow Diagram */}

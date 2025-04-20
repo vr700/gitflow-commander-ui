@@ -1,3 +1,4 @@
+
 export interface FormData {
   sshAccount: string;
   repoPath: string;
@@ -48,17 +49,39 @@ export function generateCommands(formData: FormData & { useSSH?: boolean }): { c
   // Format repository path based on SSH/HTTPS mode
   let cloneUrl = formData.repoPath;
   if (formData.useSSH) {
-    cloneUrl = formData.repoPath.replace(
+    // Handle SSH format
+    if (cloneUrl.startsWith('http')) {
+      // Convert HTTPS URL to SSH format if needed
+      const urlParts = cloneUrl
+        .replace('https://', '')
+        .replace('http://', '')
+        .replace('github.com/', 'github.com:')
+        .replace('.git', '');
+      cloneUrl = `git@${urlParts}.git`;
+    }
+    
+    // Apply SSH account if needed
+    cloneUrl = cloneUrl.replace(
       /git@github.com:/,
       `git@github.com-${formData.sshAccount}:`
     );
   } else {
-    // Convert SSH URL to HTTPS if needed
-    cloneUrl = formData.repoPath
-      .replace(/git@github.com:[^/]+\//, 'https://github.com/')
-      .replace('.git', '');
-    if (!cloneUrl.endsWith('.git')) {
-      cloneUrl += '.git';
+    // Handle HTTPS format
+    if (cloneUrl.includes('git@github.com')) {
+      // Convert SSH URL to HTTPS format
+      cloneUrl = cloneUrl
+        .replace(/git@github.com(-[^:]+)?:/, 'https://github.com/')
+        .replace('.git', '');
+      
+      if (!cloneUrl.endsWith('.git')) {
+        cloneUrl += '.git';
+      }
+    } else if (!cloneUrl.startsWith('http')) {
+      // Add https:// prefix if missing
+      cloneUrl = 'https://github.com/' + cloneUrl;
+      if (!cloneUrl.endsWith('.git')) {
+        cloneUrl += '.git';
+      }
     }
   }
   
