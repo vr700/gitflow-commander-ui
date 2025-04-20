@@ -1,4 +1,3 @@
-
 export interface FormData {
   sshAccount: string;
   repoPath: string;
@@ -29,7 +28,7 @@ export function parseIssueTitle(issueTitle: string): { issueNumber: string; issu
   return { issueNumber, issueName };
 }
 
-export function generateCommands(formData: FormData): string[] {
+export function generateCommands(formData: FormData & { useSSH?: boolean }): { command: string; stepId: string }[] {
   if (!formData) return [];
   
   const { issueNumber, issueName } = parseIssueTitle(formData.issueTitle);
@@ -46,22 +45,33 @@ export function generateCommands(formData: FormData): string[] {
   // Generate commit message
   const commitMessage = `${formData.commitType}: ${issueName}`;
   
-  // Format repository path with SSH account
-  const repoPathWithAccount = formData.repoPath.replace(
-    /git@github.com:/,
-    `git@github.com-${formData.sshAccount}:`
-  );
+  // Format repository path based on SSH/HTTPS mode
+  let cloneUrl = formData.repoPath;
+  if (formData.useSSH) {
+    cloneUrl = formData.repoPath.replace(
+      /git@github.com:/,
+      `git@github.com-${formData.sshAccount}:`
+    );
+  } else {
+    // Convert SSH URL to HTTPS if needed
+    cloneUrl = formData.repoPath
+      .replace(/git@github.com:[^/]+\//, 'https://github.com/')
+      .replace('.git', '');
+    if (!cloneUrl.endsWith('.git')) {
+      cloneUrl += '.git';
+    }
+  }
   
   // Generate commands
   return [
-    `git clone ${repoPathWithAccount}`,
-    `cd ${formData.folderName}`,
-    `git checkout ${formData.baseBranch}`,
-    `git pull origin ${formData.pullBranch}`,
-    `git checkout -b ${branchName}`,
-    `[Develop your code...]`,
-    `git add .`,
-    `git commit -m "${commitMessage}"`,
-    `git push -u origin ${branchName}`,
+    { command: `git clone ${cloneUrl}`, stepId: 'clone' },
+    { command: `cd ${formData.folderName}`, stepId: 'clone' },
+    { command: `git checkout ${formData.baseBranch}`, stepId: 'checkout' },
+    { command: `git pull origin ${formData.pullBranch}`, stepId: 'pull' },
+    { command: `git checkout -b ${branchName}`, stepId: 'branch' },
+    { command: `[Develop your code...]`, stepId: 'code' },
+    { command: `git add .`, stepId: 'commit' },
+    { command: `git commit -m "${commitMessage}"`, stepId: 'commit' },
+    { command: `git push -u origin ${branchName}`, stepId: 'push' },
   ];
 }

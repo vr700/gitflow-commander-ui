@@ -1,12 +1,15 @@
 
 import React from 'react';
-import { Git, GitBranch, GitCommit, GitPullRequest, Copy, Download, Code, Edit, Upload } from 'lucide-react';
+import { GitBranch, GitCommit, GitPullRequest, Download, Code, Upload } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
-type FlowNode = {
+type NodeStatus = 'pending' | 'active' | 'completed';
+
+export type FlowNode = {
   id: string;
   icon: React.ReactNode;
   label: string;
-  status: 'pending' | 'active' | 'completed';
+  status: NodeStatus;
 };
 
 interface FlowDiagramProps {
@@ -18,7 +21,11 @@ const FlowDiagram: React.FC<FlowDiagramProps> = ({ steps }) => {
     <div className="flow-diagram flex flex-col items-center py-4">
       {steps.map((step, index) => (
         <React.Fragment key={step.id}>
-          <div className={`flow-node flow-node-${step.status}`}>
+          <div className={cn(
+            "flow-node",
+            `flow-node-${step.status}`,
+            "transition-all duration-300 ease-in-out"
+          )}>
             <div className="flow-node-icon">
               {step.icon}
             </div>
@@ -33,7 +40,7 @@ const FlowDiagram: React.FC<FlowDiagramProps> = ({ steps }) => {
   );
 };
 
-export const getFlowSteps = (formData: any): FlowNode[] => {
+export const getFlowSteps = (formData: any, completedSteps: string[]): FlowNode[] => {
   const allStepsComplete = Boolean(
     formData.sshAccount && 
     formData.repoPath && 
@@ -44,56 +51,59 @@ export const getFlowSteps = (formData: any): FlowNode[] => {
     formData.pullBranch
   );
 
-  const hasIssueNumber = formData.issueTitle && formData.issueTitle.includes('#');
-
   return [
     {
       id: 'clone',
       icon: <Download size={20} />,
       label: 'Clone',
-      status: formData.sshAccount && formData.repoPath ? 'completed' : 'pending',
+      status: completedSteps.includes('clone') ? 'completed' 
+        : (formData.sshAccount && formData.repoPath ? 'active' : 'pending'),
     },
     {
       id: 'checkout',
       icon: <GitBranch size={20} />,
       label: 'Checkout',
-      status: formData.baseBranch ? 'completed' : 'pending',
+      status: completedSteps.includes('checkout') ? 'completed' 
+        : (formData.baseBranch ? 'active' : 'pending'),
     },
     {
       id: 'pull',
       icon: <Download size={20} />,
       label: 'Pull',
-      status: formData.pullBranch ? 'completed' : 'pending',
+      status: completedSteps.includes('pull') ? 'completed'
+        : (formData.pullBranch ? 'active' : 'pending'),
     },
     {
       id: 'branch',
       icon: <GitBranch size={20} />,
       label: 'New Branch',
-      status: formData.commitType && formData.issueTitle ? 'completed' : 'pending',
+      status: completedSteps.includes('branch') ? 'completed'
+        : (formData.commitType && formData.issueTitle ? 'active' : 'pending'),
     },
     {
       id: 'code',
       icon: <Code size={20} />,
       label: 'Code',
-      status: allStepsComplete ? 'active' : 'pending',
+      status: completedSteps.includes('code') ? 'completed'
+        : (allStepsComplete ? 'active' : 'pending'),
     },
     {
       id: 'commit',
       icon: <GitCommit size={20} />,
       label: 'Commit',
-      status: 'pending',
+      status: completedSteps.includes('commit') ? 'completed' : 'pending',
     },
     {
       id: 'push',
       icon: <Upload size={20} />,
       label: 'Push',
-      status: 'pending',
+      status: completedSteps.includes('push') ? 'completed' : 'pending',
     },
     {
       id: 'pr',
       icon: <GitPullRequest size={20} />,
       label: 'PR',
-      status: 'pending',
+      status: completedSteps.includes('pr') ? 'completed' : 'pending',
     },
   ];
 };
